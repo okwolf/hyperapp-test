@@ -24,6 +24,9 @@
   "peerDependencies": {
     "hyperapp": "^0.12.1"
   },
+  "engines": {
+    "node": ">=4"
+  },
   "scripts": {
     "test": "jest --coverage --no-cache"
   },
