@@ -1,7 +1,6 @@
 const { app } = require('hyperapp');
 
 const isFn = value => typeof value === 'function';
-const isObj = value => typeof value === 'object';
 
 const test = (
   emit,
@@ -72,7 +71,7 @@ const testApp = (props, ...tests) => {
 
   const actionTests = tests.filter(test => Array.isArray(test));
   return actionTests.reduce((actionPromise, [name, ...args]) => {
-    const data = args.find(isObj);
+    const data = args.find(arg => !isFn(arg));
     const assertFn = args.find(isFn);
     return actionPromise
       .then(() => emit('testAction', { name, data, eventName }))

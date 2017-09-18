@@ -1,12 +1,13 @@
 import { app, h } from 'hyperapp';
 import { testApp } from '../src';
 import counterApp from './counterApp';
+import basicApp from './basicApp';
 
 window.requestAnimationFrame = process.nextTick;
 
 describe('testApp', () => {
   describe('without a view', () => {
-    it('should handle hello world', () =>
+    it('should handle hello world action', () =>
       testApp(
         {
           actions: {
@@ -62,7 +63,7 @@ describe('testApp', () => {
       ));
   });
   describe('with a view', () => {
-    it('should handle hello world', () =>
+    it('should handle hello world action', () =>
       testApp(
         {
           actions: {
@@ -79,6 +80,19 @@ describe('testApp', () => {
           }
         ]
       ));
+    it('should handle a basic app with string action data', () =>
+      testApp(basicApp, [
+        'say',
+        'hello',
+        ({ states, actions, views }) => {
+          expect(states).toEqual([
+            { message: 'nothing' },
+            { message: 'hello' }
+          ]);
+          expect(actions).toEqual([{ name: 'say', data: 'hello' }]);
+          expect(views).toEqual([h('main', {}, 'hello')]);
+        }
+      ]));
     it('should error for unknown actions', () =>
       expect(testApp(counterApp, ['wrong'])).rejects.toEqual(
         'unknown action: wrong'
