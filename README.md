@@ -8,7 +8,7 @@ hyperapp-test is a JavaScript Testing utility for [Hyperapp](https://github.com/
 
 hyperapp-test is unopinionated regarding which test runner or assertion library you use, and should be compatible with all major test runners and assertion libraries out there.
 
-hyperapp-test is compatible with `Hyperapp 0.12.x` and `Node.js >=4`.
+hyperapp-test is compatible with `Hyperapp 0.13.x` and `Node.js >=4`.
 
 ## Setup
 
@@ -172,9 +172,9 @@ test('a basic app renders the right view', () =>
 );
 ```
 
-### `test`
+### `createTestProps`
 
-A [mixin](https://github.com/hyperapp/hyperapp/blob/master/docs/mixins.md) used internally by hyperapp-test for tracking the last `states`, `actions`, and `views`. This mixin is also responsible for firing the test actions, and calling our assertion functions when the processing of the action is complete. Unless you are building your own reusable test library, you probably want to use `testApp` instead of this.
+A function that creates `props` used internally by hyperapp-test for tracking the last `states`, `actions`, and `views`. This is also responsible for firing the test actions and calling our assertion functions when the processing of the action is complete. Unless you are building your own reusable test library, you probably want to use `testApp` instead of this.
 
 ## License
 
