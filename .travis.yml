@@ -1,9 +1,23 @@
 language: node_js
 node_js:
-#- '4'
+- '4'
 - '5'
 - '6'
 - '7'
 - '8'
-after_script:
-- npm run coverage
+
+env:
+  - NODE_ENV=development
+
+before_install:
+  - npm i -g codecov
+
+install:
+  - npm install
+
+script:
+  - npm test
+  - codecov
+
+notifications:
+  email: false

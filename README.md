@@ -1,7 +1,7 @@
 # hyperapp-test
 
 [![Build Status](https://travis-ci.org/okwolf/hyperapp-test.svg?branch=master)](https://travis-ci.org/okwolf/hyperapp-test)
-[![Coverage Status](https://coveralls.io/repos/github/okwolf/hyperapp-test/badge.svg?branch=coverage)](https://coveralls.io/github/okwolf/hyperapp-test?branch=coverage)
+[![Codecov](https://img.shields.io/codecov/c/github/okwolf/hyperapp-test/master.svg)](https://codecov.io/gh/okwolf/hyperapp-test)
 [![npm](https://img.shields.io/npm/v/hyperapp-test.svg)](https://www.npmjs.org/package/hyperapp-test)
 
 hyperapp-test is a JavaScript Testing utility for [Hyperapp](https://github.com/hyperapp/hyperapp) that makes it easier to write assertions for app logic related to state changes as a result of actions and the resulting views. This task is complicated by the auto wiring of actions by Hyperapp's state management and the support for asynchronous actions provided by thunks. By providing a low overhead API to solve this, testing app logic can be simple as it would be in [Redux](http://redux.js.org/docs/recipes/WritingTests.html) or [Elm](http://elmprogramming.com/easy-to-test.html).
