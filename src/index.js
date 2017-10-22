@@ -1,4 +1,5 @@
 const { app } = require('hyperapp');
+const { enhance, makeUpdate } = require('hyperapp-middleware');
 
 const isFn = value => typeof value === 'function';
 
@@ -42,7 +43,7 @@ const createTestProps = () => ({
           }
         });
       },
-      reset: ({ states = [] } = {}) => {
+      reset: ({ states = [] }) => {
         return {
           states: states.slice(-1),
           actions: [],
@@ -57,58 +58,48 @@ const createTestProps = () => ({
     const renderedView = render(state, actions, ...otherArgs);
     actions.test.trackView(renderedView);
     return renderedView;
-  },
-  hooks: [
-    (state, actions) => {
-      const endAction = (action, nextState) => {
-        actions.test.trackState(nextState);
-        actions.test.endAction(action);
-        return nextState;
-      };
-      actions.test.reset();
-      actions.test.trackState(state);
-      return action => {
-        if (!action.name.startsWith('test')) {
-          actions.test.startAction(action);
-          return result => {
-            if (isFn(result)) {
-              return update =>
-                result(updatedResult =>
-                  update(endAction(action, updatedResult))
-                );
-            } else {
-              return endAction(action, result);
-            }
-          };
-        }
-      };
-    }
-  ]
+  }
 });
 
 const testApp = (props, ...tests) => {
   const eventName = isFn(props.view) ? 'render' : 'update';
   const initialState = tests.find(test => !Array.isArray(test));
+
   const testProps = createTestProps();
   const createAppProps = Object.assign(
     {},
     props,
     {
       state: initialState || props.state,
-      actions: Object.assign({}, props.actions || {}, testProps.actions),
-      hooks: [...(props.hooks || []), ...testProps.hooks]
+      actions: Object.assign({}, props.actions, testProps.actions),
+      init(state, actions) {
+        if (isFn(props.init)) {
+          props.init(state, actions);
+        }
+        actions.test.reset();
+        actions.test.trackState(state);
+      }
     },
     props.view && {
       view: testProps.render(props.view)
     }
   );
-  const actions = app(createAppProps);
-
-  const actionTests = tests.filter(test => Array.isArray(test));
-  return actionTests.reduce((actionPromise, [name, ...args]) => {
+  const actions = enhance(
+    makeUpdate(action => {
+      if (actions && !action.name.startsWith('test.')) {
+        actions.test.startAction(action);
+        return (state, localActions, nextState) => {
+          actions.test.trackState(nextState);
+          actions.test.endAction(action);
+          return nextState;
+        };
+      }
+    })
+  )(app)(createAppProps);
+  const addTest = (currentTest, [name, ...args]) => {
     const data = args.find(arg => !isFn(arg));
     const assertFn = args.find(isFn);
-    return actionPromise
+    return currentTest
       .then(
         () =>
           new Promise((resolve, reject) => {
@@ -122,7 +113,9 @@ const testApp = (props, ...tests) => {
       )
       .then(assertFn)
       .then(() => actions.test.reset());
-  }, Promise.resolve());
+  };
+  const actionTests = tests.filter(test => Array.isArray(test));
+  return actionTests.reduce(addTest, Promise.resolve());
 };
 
 module.exports = {
