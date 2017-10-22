@@ -84,7 +84,8 @@ const testApp = (props, ...tests) => {
       view: testProps.render(props.view)
     }
   );
-  const actions = enhance(
+  let actions;
+  actions = enhance(
     makeUpdate(action => {
       if (actions && !action.name.startsWith('test.')) {
         actions.test.startAction(action);
