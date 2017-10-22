@@ -1,8 +1,8 @@
 import { h } from 'hyperapp';
 
 module.exports = {
-  state: {
-    message: 'nothing'
+  init(state, actions) {
+    actions.say('nothing');
   },
   actions: {
     say: (state, actions, message) => ({ message })

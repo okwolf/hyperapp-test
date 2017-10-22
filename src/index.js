@@ -1,86 +1,124 @@
 const { app } = require('hyperapp');
+const { enhance, makeUpdate } = require('hyperapp-middleware');
 
 const isFn = value => typeof value === 'function';
 
-const test = (
-  emit,
-  pendingActions = 0,
-  tracking = { states: [], actions: [], views: [] },
-  events = {}
-) => ({
-  events: {
-    load(state) {
-      tracking.states.push(state);
-    },
-    action(state, actions, action) {
-      pendingActions++;
-      tracking.actions.push(action);
-    },
-    resolve(state, actions, result) {
-      if (typeof result === 'function') {
-        return update =>
-          result(result => {
-            pendingActions--;
-            return update(result);
-          });
-      } else {
-        pendingActions--;
-      }
-    },
-    update(state, actions, nextState) {
-      tracking.states.push(nextState);
-      if (pendingActions === 0 && isFn(events.update)) {
-        events.update(tracking);
-      }
-    },
-    render: (state, actions, view) => (...args) => {
-      const nextView = view(...args);
-      tracking.views.push(nextView);
-      if (pendingActions === 0 && isFn(events.render)) {
-        events.render(tracking);
-      }
-      return nextView;
-    },
-    testAction: (state, actions, { name, data, eventName }) =>
-      new Promise((resolve, reject) => {
-        const action = actions[name];
-        if (action) {
-          events[eventName] = resolve;
-          actions[name](data);
-        } else {
-          reject(`unknown action: ${name}`);
-        }
+const createTestProps = () => ({
+  actions: {
+    test: {
+      run: (state, actions, { eventName, resolve, action, data }) => update => {
+        update({ on: { [eventName]: resolve } });
+        action(data);
+      },
+      trackState: ({ states }, actions, nextState) => {
+        const nonTestState = Object.assign({}, nextState);
+        delete nonTestState.test;
+        return {
+          states: states.concat(nonTestState)
+        };
+      },
+      startAction: ({ actions, pendingActions }, _, action) => ({
+        actions: actions.concat(action),
+        pendingActions: pendingActions.concat(action)
       }),
-    resetTracking: state => {
-      tracking.states = [state];
-      tracking.actions = [];
-      tracking.views = [];
-      events = {};
+      endAction: ({ pendingActions, on }, actions, action) => update => {
+        update({
+          pendingActions: pendingActions.filter(
+            pendingAction => pendingAction !== action
+          )
+        });
+        return update(updatedState => {
+          if (updatedState.pendingActions.length === 0 && isFn(on.update)) {
+            on.update(updatedState);
+          }
+        });
+      },
+      trackView: ({ views, pendingActions, on }, actions, view) => update => {
+        update({
+          views: views.concat(view)
+        });
+        return update(updatedState => {
+          if (updatedState.pendingActions.length === 0 && isFn(on.render)) {
+            on.render(updatedState);
+          }
+        });
+      },
+      reset: ({ states = [] }) => {
+        return {
+          states: states.slice(-1),
+          actions: [],
+          pendingActions: [],
+          views: [],
+          on: {}
+        };
+      }
     }
+  },
+  render: render => (state, actions, ...otherArgs) => {
+    const renderedView = render(state, actions, ...otherArgs);
+    actions.test.trackView(renderedView);
+    return renderedView;
   }
 });
 
 const testApp = (props, ...tests) => {
   const eventName = isFn(props.view) ? 'render' : 'update';
   const initialState = tests.find(test => !Array.isArray(test));
-  const createAppProps = Object.assign({}, props, {
-    state: initialState || props.state,
-    mixins: [test, ...(props.mixins || [])]
-  });
-  const emit = app(createAppProps);
 
-  const actionTests = tests.filter(test => Array.isArray(test));
-  return actionTests.reduce((actionPromise, [name, ...args]) => {
+  const testProps = createTestProps();
+  const createAppProps = Object.assign(
+    {},
+    props,
+    {
+      state: initialState || props.state,
+      actions: Object.assign({}, props.actions, testProps.actions),
+      init(state, actions) {
+        if (isFn(props.init)) {
+          props.init(state, actions);
+        }
+        actions.test.reset();
+        actions.test.trackState(state);
+      }
+    },
+    props.view && {
+      view: testProps.render(props.view)
+    }
+  );
+  const actions = enhance(
+    makeUpdate(action => {
+      if (actions && !action.name.startsWith('test.')) {
+        actions.test.startAction(action);
+        return (state, localActions, nextState) => {
+          actions.test.trackState(nextState);
+          actions.test.endAction(action);
+          return nextState;
+        };
+      }
+    })
+  )(app)(createAppProps);
+  const addTest = (currentTest, [name, ...args]) => {
     const data = args.find(arg => !isFn(arg));
     const assertFn = args.find(isFn);
-    return actionPromise
-      .then(() => emit('testAction', { name, data, eventName }))
+    return currentTest
+      .then(
+        () =>
+          new Promise((resolve, reject) => {
+            const action = actions[name];
+            if (action) {
+              actions.test.run({ eventName, resolve, action, data });
+            } else {
+              reject(`unknown action: ${name}`);
+            }
+          })
+      )
       .then(assertFn)
-      .then(() => emit('resetTracking'));
-  }, Promise.resolve());
+      .then(() => actions.test.reset());
+  };
+  const actionTests = tests.filter(test => Array.isArray(test));
+  return actionTests.reduce(addTest, Promise.resolve());
 };
 
 module.exports = {
-  test,
+  createTestProps,
   testApp
 };
