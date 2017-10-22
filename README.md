@@ -1,14 +1,14 @@
-# hyperapp-test
+# Hyperapp Test
 
 [![Build Status](https://travis-ci.org/okwolf/hyperapp-test.svg?branch=master)](https://travis-ci.org/okwolf/hyperapp-test)
 [![Codecov](https://img.shields.io/codecov/c/github/okwolf/hyperapp-test/master.svg)](https://codecov.io/gh/okwolf/hyperapp-test)
 [![npm](https://img.shields.io/npm/v/hyperapp-test.svg)](https://www.npmjs.org/package/hyperapp-test)
 
-hyperapp-test is a JavaScript Testing utility for [Hyperapp](https://github.com/hyperapp/hyperapp) that makes it easier to write assertions for app logic related to state changes as a result of actions and the resulting views. This task is complicated by the auto wiring of actions by Hyperapp's state management and the support for asynchronous actions provided by thunks. By providing a low overhead API to solve this, testing app logic can be simple as it would be in [Redux](http://redux.js.org/docs/recipes/WritingTests.html) or [Elm](http://elmprogramming.com/easy-to-test.html).
+Hyperapp Test is a JavaScript Testing utility for [Hyperapp](https://github.com/hyperapp/hyperapp) that makes it easier to write assertions for app logic related to state changes as a result of actions and the resulting views. This task is complicated by the auto wiring of actions by Hyperapp's state management and the support for asynchronous actions provided by thunks. By providing a low overhead API to solve this, testing app logic can be simple as it would be in [Redux](http://redux.js.org/docs/recipes/WritingTests.html) or [Elm](http://elmprogramming.com/easy-to-test.html).
 
-hyperapp-test is unopinionated regarding which test runner or assertion library you use, and should be compatible with all major test runners and assertion libraries out there.
+Hyperapp Test is unopinionated regarding which test runner or assertion library you use, and should be compatible with all major test runners and assertion libraries out there.
 
-hyperapp-test is compatible with `Hyperapp 0.13.x` and `Node.js >=4`.
+Hyperapp Test is compatible with `Hyperapp 0.15.x` and `Node.js >=4`.
 
 ## Setup
 
@@ -174,8 +174,8 @@ test('a basic app renders the right view', () =>
 
 ### `createTestProps`
 
-A function that creates `props` used internally by hyperapp-test for tracking the last `states`, `actions`, and `views`. This is also responsible for firing the test actions and calling our assertion functions when the processing of the action is complete. Unless you are building your own reusable test library, you probably want to use `testApp` instead of this.
+A function that creates `props` used internally by Hyperapp Test for tracking the last `states`, `actions`, and `views`. This is also responsible for firing the test actions and calling our assertion functions when the processing of the action is complete. Unless you are building your own reusable test library, you probably want to use `testApp` instead of this.
 
 ## License
 
-hyperapp-test is MIT licensed. See [LICENSE](LICENSE.md).
+Hyperapp Test is MIT licensed. See [LICENSE](LICENSE.md).
